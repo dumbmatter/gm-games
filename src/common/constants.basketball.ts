@@ -6,8 +6,20 @@ const COMPOSITE_WEIGHTS: CompositeWeights<RatingKey> = {
 		ratings: ["spd", "jmp", "dnk", "tp", "drb", "pss"],
 	},
 	usage: {
-		ratings: ["ins", "dnk", "fg", "tp", "spd", "hgt", "drb", "oiq"],
-		weights: [1.5, 1, 1, 1, 0.5, 0.5, 0.5, 0.5],
+		ratings: [
+			"ins",
+			"drb",
+			"fg",
+			"spd",
+			"oiq",
+			"pss",
+			"stre",
+			"dnk",
+			"tp",
+			"ft",
+			"hgt",
+		],
+		weights: [1.1, 0.6, 0.5, 0.5, 0.2, 0.2, 0.2, 0.2, 0.1, 0.1, 0.1],
 	},
 	dribbling: {
 		ratings: ["drb", "spd"],
@@ -18,16 +30,27 @@ const COMPOSITE_WEIGHTS: CompositeWeights<RatingKey> = {
 		},
 	},
 	passing: {
-		ratings: ["drb", "pss", "oiq"],
-		weights: [0.4, 1, 0.5],
+		ratings: ["drb", "pss", "fg", "spd", "reb", "dnk"],
+		weights: [0.7, 1.4, 0.3, 0.3, 0.2, 0.1],
 		skill: {
 			label: "Ps",
 			cutoff: 0.63,
 		},
 	},
 	turnovers: {
-		ratings: [50, "ins", "pss", "oiq"],
-		weights: [0.5, 1, 1, -1],
+		ratings: [
+			"pss",
+			"dnk",
+			"ins",
+			"reb",
+			"drb",
+			"spd",
+			"hgt",
+			"ft",
+			"stre",
+			"oiq",
+		],
+		weights: [2.1, 1.0, 0.8, 0.5, 0.4, 0.3, 0.2, -0.1, -0.2, -0.3],
 	},
 	shootingAtRim: {
 		ratings: ["hgt", "stre", "dnk", "oiq"],
@@ -57,8 +80,8 @@ const COMPOSITE_WEIGHTS: CompositeWeights<RatingKey> = {
 		ratings: ["ft"],
 	},
 	rebounding: {
-		ratings: ["hgt", "stre", "jmp", "reb", "oiq", "diq"],
-		weights: [2, 0.1, 0.1, 2, 0.5, 0.5],
+		ratings: ["hgt", "reb", "diq", "jmp", "oiq", "drb"],
+		weights: [7, 3, 3, 2, 2, 2],
 		skill: {
 			label: "R",
 			cutoff: 0.61,
@@ -70,15 +93,15 @@ const COMPOSITE_WEIGHTS: CompositeWeights<RatingKey> = {
 	},
 	blocking: {
 		ratings: ["hgt", "jmp", "diq"],
-		weights: [2.5, 1.5, 0.5],
+		weights: [2.1, 1.2, 1.0],
 	},
 	fouling: {
-		ratings: [50, "hgt", "diq", "spd"],
-		weights: [3, 1, -1, -1],
+		ratings: [50, "hgt", "diq", "spd", "drb"],
+		weights: [4, 1, -1, -1, -1],
 	},
 	drawingFouls: {
-		ratings: ["hgt", "spd", "drb", "dnk", "oiq"],
-		weights: [1, 1, 1, 1, 1],
+		ratings: ["hgt", "reb", "spd", "drb", "dnk", "ins", "oiq"],
+		weights: [1.1, 0.71, 0.3, 0.4, 0.9, 0.3, 0.5],
 	},
 	defense: {
 		ratings: ["hgt", "stre", "spd", "jmp", "diq"],
