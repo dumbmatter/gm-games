@@ -203,7 +203,10 @@ const processTeam = (
 
 		t.pace /= numPlayers;
 		t.pace = t.pace * 15 + 100; // Scale between 100 and 115
-
+		const pace_avg = 108.4;
+		const pace_diff = t.pace - pace_avg;
+		const pace_adj = 15 * Math.tanh(1 * pace_diff);
+		t.pace = pace_avg + pace_adj;
 		if (allStarGame) {
 			t.pace *= 1.15;
 		}

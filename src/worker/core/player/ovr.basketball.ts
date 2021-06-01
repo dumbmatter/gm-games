@@ -10,22 +10,22 @@ import type { PlayerRatings } from "../../../common/types.basketball";
 const ovr = (ratings: PlayerRatings): number => {
 	// See analysis/player-ovr-basketball
 	const r =
-		0.159 * (ratings.hgt - 47.5) +
-		0.0777 * (ratings.stre - 50.2) +
-		0.123 * (ratings.spd - 50.8) +
-		0.051 * (ratings.jmp - 48.7) +
-		0.0632 * (ratings.endu - 39.9) +
-		0.0126 * (ratings.ins - 42.4) +
-		0.0286 * (ratings.dnk - 49.5) +
-		0.0202 * (ratings.ft - 47.0) +
-		0.0726 * (ratings.tp - 47.1) +
-		0.133 * (ratings.oiq - 46.8) +
-		0.159 * (ratings.diq - 46.7) +
-		0.059 * (ratings.drb - 54.8) +
-		0.062 * (ratings.pss - 51.3) +
-		0.01 * (ratings.fg - 47.0) +
-		0.01 * (ratings.reb - 51.4) +
-		48.5;
+		0.209 * ratings.hgt +
+		0.0648 * ratings.stre +
+		0.148 * ratings.spd +
+		0.0609 * ratings.jmp +
+		0.0314 * ratings.endu +
+		0.0109 * ratings.ins +
+		0.0288 * ratings.dnk +
+		0.0112 * ratings.ft +
+		0.15 * ratings.tp +
+		0.107 * ratings.oiq +
+		0.0799 * ratings.diq +
+		0.103 * ratings.drb +
+		0.0869 * ratings.pss +
+		-0.024 * ratings.fg +
+		0.0436 * ratings.reb +
+		-6.12;
 
 	// Fudge factor to keep ovr ratings the same as they used to be (back before 2018 ratings rescaling)
 	// +8 at 68

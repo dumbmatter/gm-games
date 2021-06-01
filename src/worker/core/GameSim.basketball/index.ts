@@ -169,6 +169,55 @@ const getSortedIndexes = (ovrs: number[]) => {
 
 	return sortedIndexes;
 };
+// point • matrix
+const linearTransform4D = (
+	matrix: number[],
+	bias: number[],
+	point: number[],
+): number[] => {
+	// Give a simple variable name to each part of the matrix, a column and row number
+	const c0r0 = matrix[0],
+		c1r0 = matrix[1],
+		c2r0 = matrix[2],
+		c3r0 = matrix[3];
+	const c0r1 = matrix[4],
+		c1r1 = matrix[5],
+		c2r1 = matrix[6],
+		c3r1 = matrix[7];
+	const c0r2 = matrix[8],
+		c1r2 = matrix[9],
+		c2r2 = matrix[10],
+		c3r2 = matrix[11];
+	const c0r3 = matrix[12],
+		c1r3 = matrix[13],
+		c2r3 = matrix[14],
+		c3r3 = matrix[15];
+
+	// Now set some simple names for the point
+	const x = point[0];
+	const y = point[1];
+	const z = point[2];
+	const w = point[3];
+
+	// Multiply the point against each part of the 1st column, then add together
+	const resultX = x * c0r0 + y * c0r1 + z * c0r2 + w * c0r3;
+
+	// Multiply the point against each part of the 2nd column, then add together
+	const resultY = x * c1r0 + y * c1r1 + z * c1r2 + w * c1r3;
+
+	// Multiply the point against each part of the 3rd column, then add together
+	const resultZ = x * c2r0 + y * c2r1 + z * c2r2 + w * c2r3;
+
+	// Multiply the point against each part of the 4th column, then add together
+	const resultW = x * c3r0 + y * c3r1 + z * c3r2 + w * c3r3;
+
+	return [
+		resultX + bias[0],
+		resultY + bias[1],
+		resultZ + bias[2],
+		resultW + bias[3],
+	];
+};
 
 class GameSim {
 	id: number;
@@ -1364,14 +1413,92 @@ class GameSim {
 		let probMake;
 		let probMissAndFoul;
 		let type: ShotType;
+		const m1 = [
+			-0.11062113, 0.2145893, 0.21443088, -1.286721, 0.05455208, -0.9112426,
+			-0.285477, 0.5084881, -0.40539294, -1.0017884, -0.9085916, 0.47239658,
+			-0.2735867, 0.96344316, 1.0659783, 0.70627713,
+		];
+		const b1 = [-0.25969836, 0.215397, 0.3555345, 0.2896994];
+		const m2 = [
+			-0.6771088, -0.5624548, -0.3640189, 0.39685425, -1.6664761, 0.021767367,
+			0.17568927, 1.4071639, -1.2445395, 1.1329722, -0.14028981, -0.5465622,
+			0.44314194, 0.76718783, 1.7255903, 1.1030437,
+		];
+		const b2 = [0.5321581, 0.14918292, -0.027641574, 0.0352142];
+		const m3 = [
+			0.9709988, 0.8057134, -1.0169693, -0.059781134, 0.12667929, 0.0025585638,
+			0.7535072, 0.5613678, 1.2599803, -0.74605703, 0.61769235, -1.3749193,
+			-0.03890923, 0.26556912, 0.93223006, -1.3593911,
+		];
+		const b3 = [-0.112184435, 0.980346, 0.0077717914, 0.58999795];
+		const m4 = [
+			-0.5897572, -0.20046012, 1.1114576, -0.59119254, 0.8493401, 0.59680605,
+			-0.09680688, -0.13142292, -0.45576066, -0.67522925, -0.6649587, 1.0499781,
+			2.0329778, 1.4694291, 0.7106988, -2.1637397,
+		];
+		const b4 = [0.47565907, 0.057101946, -0.5868888, -0.02368892];
 
-		if (
-			forceThreePointer ||
-			(this.team[this.o].player[p].compositeRating.shootingThreePointer >
-				0.35 &&
-				Math.random() <
-					0.67 * shootingThreePointerScaled * g.get("threePointTendencyFactor"))
-		) {
+		const inputVec = [
+			this.team[this.o].player[p].compositeRating.shootingAtRim,
+			this.team[this.o].player[p].compositeRating.shootingLowPost,
+			this.team[this.o].player[p].compositeRating.shootingMidRange,
+			this.team[this.o].player[p].compositeRating.shootingThreePointer,
+		];
+
+		const iVT = inputVec[0] + inputVec[1] + inputVec[2] + inputVec[3];
+
+		const h1 = linearTransform4D(m1, b1, [
+			inputVec[0] / iVT,
+			inputVec[1] / iVT,
+			inputVec[2] / iVT,
+			inputVec[3] / iVT,
+		]);
+		const h2 = linearTransform4D(m2, b2, [
+			Math.max(h1[0], 0.01 * h1[0]),
+			Math.max(h1[1], 0.01 * h1[1]),
+			Math.max(h1[2], 0.01 * h1[2]),
+			Math.max(h1[3], 0.01 * h1[3]),
+		]);
+		const h3 = linearTransform4D(m3, b3, [
+			Math.max(h2[0], 0.01 * h2[0]),
+			Math.max(h2[1], 0.01 * h2[1]),
+			Math.max(h2[2], 0.01 * h2[2]),
+			Math.max(h2[3], 0.01 * h2[3]),
+		]);
+		const res = linearTransform4D(m4, b4, [
+			Math.max(h3[0], 0.01 * h3[0]),
+			Math.max(h3[1], 0.01 * h3[1]),
+			Math.max(h3[2], 0.01 * h3[2]),
+			Math.max(h3[3], 0.01 * h3[3]),
+		]);
+
+		const rShot = res[0];
+		const lShot = res[1];
+		const mShot = res[2];
+		const tShot = res[3];
+
+		const minV = Math.min(rShot, lShot, mShot, tShot);
+
+		// Synergy makes shots at the rim either more likely or less likely
+		const sFactor = Math.exp(
+			this.team[this.o].synergy.off - this.team[this.d].synergy.def,
+		); // ranges from 0.6 to 1.4. Mean of 0.87
+		const sFactor2 = 17.6 * this.synergyFactor * (sFactor - 0.87); // mean of 0, std of synergyFactor * 2, roughly
+		const sScale = 0.5 + 1 / (1 + Math.exp(-sFactor2)); // mean of 1, ranges [0.75 to 1.35 in playoffs], 2.5x less in regular season
+
+		const erShot = Math.exp(rShot - minV) * sScale;
+		const elShot = Math.exp(lShot - minV);
+		const emShot = Math.exp(mShot - minV) / sScale;
+		const etShot = Math.exp(tShot - minV) * g.get("threePointTendencyFactor");
+		const shotTotal = erShot + elShot + emShot + etShot;
+		const sNum = Math.random();
+
+		const prShot = erShot / shotTotal;
+		//const plShot = (elShot/shotTotal);
+		const pmShot = emShot / shotTotal;
+		const ptShot = etShot / shotTotal;
+
+		if (forceThreePointer || sNum < ptShot) {
 			// Three pointer
 			type = "threePointer";
 			probMissAndFoul = 0.02;
@@ -1386,23 +1513,7 @@ class GameSim {
 
 			this.recordPlay("fgaTp", this.o, [this.team[this.o].player[p].name]);
 		} else {
-			const r1 =
-				0.8 *
-				Math.random() *
-				this.team[this.o].player[p].compositeRating.shootingMidRange;
-			const r2 =
-				Math.random() *
-				(this.team[this.o].player[p].compositeRating.shootingAtRim +
-					this.synergyFactor *
-						(this.team[this.o].synergy.off - this.team[this.d].synergy.def)); // Synergy makes easy shots either more likely or less likely
-
-			const r3 =
-				Math.random() *
-				(this.team[this.o].player[p].compositeRating.shootingLowPost +
-					this.synergyFactor *
-						(this.team[this.o].synergy.off - this.team[this.d].synergy.def)); // Synergy makes easy shots either more likely or less likely
-
-			if (r1 > r2 && r1 > r3) {
+			if (sNum < pmShot + ptShot) {
 				// Two point jumper
 				type = "midRange";
 				probMissAndFoul = 0.07;
@@ -1413,7 +1524,7 @@ class GameSim {
 				this.recordPlay("fgaMidRange", this.o, [
 					this.team[this.o].player[p].name,
 				]);
-			} else if (r2 > r3) {
+			} else if (sNum < prShot + pmShot + ptShot) {
 				// Dunk, fast break or half court
 				type = "atRim";
 				probMissAndFoul = 0.37;
