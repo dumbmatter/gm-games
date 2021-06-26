@@ -689,21 +689,23 @@ class GameSim {
 	 */
 	fatigue(energy: number, skip?: boolean): number {
 		energy += 0.016;
-
-		if (energy > 1) {
-			energy = 1;
+		let res = energy;
+		if (res > 1) {
+			res = 1;
 		}
-		if (skip) {
-			return energy;
+		if (!skip) {
+			// Late in games, or in OT, fatigue matters less
+			if (this.isLateGame()) {
+				const factor = 6 - this.t;
+				res = (res + factor) / (1 + factor);
+			}
 		}
+		// *0.5 + 0.5 is just turning tanh into sigmoid
+		// 50 is the steepness of curve
+		// 0.85 is the average (e.g. when output equals 0.5)
+		res = Math.tanh((res - 0.85) * 50) * 0.5 + 0.5;
 
-		// Late in games, or in OT, fatigue matters less
-		if (this.isLateGame()) {
-			const factor = 6 - this.t;
-			return (energy + factor) / (1 + factor);
-		}
-
-		return energy;
+		return res;
 	}
 
 	/**
@@ -754,14 +756,16 @@ class GameSim {
 					) {
 						ovrs[p] = -Infinity;
 					} else {
+						// scale energy based on  playing time, except in all-star game.
+						const energy = !this.allStarGame
+							? this.team[t].player[p].stat.energy *
+							  this.team[t].player[p].ptModifier
+							: this.team[t].player[p].stat.energy;
+
 						ovrs[p] =
 							this.team[t].player[p].valueNoPot *
-							this.fatigue(this.team[t].player[p].stat.energy) *
+							this.fatigue(energy) *
 							(!lateGame ? random.uniform(0.9, 1.1) : 1);
-
-						if (!this.allStarGame) {
-							ovrs[p] *= this.team[t].player[p].ptModifier;
-						}
 
 						// Also scale based on margin late in games, so stars play less in blowouts (this doesn't really work that well, but better than nothing)
 						if (blowout) {
@@ -851,25 +855,6 @@ class GameSim {
 
 							if (pos[j] === "C") {
 								numC += 1;
-							}
-						}
-
-						const cutoff =
-							this.numPlayersOnCourt >= 5
-								? 2
-								: this.numPlayersOnCourt >= 3
-								? 1
-								: 0;
-						if (
-							(numG < cutoff && numPG === 0) ||
-							(numF < cutoff && numC === 0)
-						) {
-							if (
-								this.fatigue(this.team[t].player[p].stat.energy) > 0.728 &&
-								!onCourtIsIneligible
-							) {
-								// Exception for ridiculously tired players, so really unbalanced teams won't play starters whole game
-								continue;
 							}
 						}
 
